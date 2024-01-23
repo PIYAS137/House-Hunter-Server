@@ -83,35 +83,67 @@ async function run() {
             res.send(result);
         })
 
+        // Delete One Houses API ======================================= >>>>>>
+        app.delete('/item/:sid', async (req, res) => {
+            const id = req.params.sid;
+            const query = { _id: new ObjectId(id) };
+            const result = await houseCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // Update One Houses API ======================================= >>>>>>
+        app.put('/item/:sid', async (req, res) => {
+            const id = req.params.sid;
+            const query = { _id: new ObjectId(id) };
+            const data = req.body;
+            data._id = new ObjectId(data._id); //convert string to new ObjectId
+            const updatedDoc = {
+                $set: {
+                    name: data?.name,
+                    address: data?.address,
+                    city: data?.city,
+                    bedroom: data?.bedroom,
+                    size: data?.size,
+                    image: data?.image,
+                    date: data?.date,
+                    price: data?.price,
+                    phone: data?.phone,
+                    describe: data?.describe,
+                    _id: data?._id,
+                    create: data?.create,
+                    email: data?.email,
+                    status: data?.status
+                }
+            }
+            const result = await houseCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        })
+
         // Get Owners added Houses API ====================================== >>>>>>
         app.get('/owner', async (req, res) => {
             const email = req.query.email;
             const query = { email };
-            console.log(email);
             const result = await houseCollection.find(query).toArray();
-            console.log(result);
             res.send(result);
         })
-
-        // const finalQuery = { _id: new ObjectId(data.requset_food_id) }
 
         // Make a request =================================================== >>>>>>>
         app.post('/request', async (req, res) => {
             const data = req.body;
-            const userQuery = {userEmail : data.userEmail};
+            const userQuery = { userEmail: data.userEmail };
             const totalReq = await requestCollection.find(userQuery).toArray();
-            if(totalReq.length <2){
+            if (totalReq.length < 2) {
                 data.houseId = new ObjectId(data.houseId);
-                const idQuery = {houseId : data.houseId, userEmail:data.userEmail };
+                const idQuery = { houseId: data.houseId, userEmail: data.userEmail };
                 const isExist = await requestCollection.findOne(idQuery);
-                if(isExist){
-                    res.send({flag : -1 }) // already make request for this home !
-                }else{
+                if (isExist) {
+                    res.send({ flag: -1 }) // already make request for this home !
+                } else {
                     const result = await requestCollection.insertOne(data);
                     res.send(result);
                 }
-            }else{
-                res.send({flag : 1}) // this user already make request for 2 home !
+            } else {
+                res.send({ flag: 1 }) // this user already make request for 2 home !
             }
         })
 
