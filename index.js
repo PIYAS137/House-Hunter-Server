@@ -1,5 +1,5 @@
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -30,6 +30,7 @@ async function run() {
         // Database & Collections 
         const userCollection = client.db("HouseHunterDatabase").collection('userCollection');
         const houseCollection = client.db("HouseHunterDatabase").collection("houseCollection");
+        const requestCollection = client.db("HouseHunterDatabase").collection("requestCollection");
 
 
 
@@ -74,16 +75,55 @@ async function run() {
             res.send(result);
         })
 
+        // Get One Houses Details API ======================================= >>>>>>
+        app.get('/item/:sid', async (req, res) => {
+            const id = req.params.sid;
+            const query = { _id: new ObjectId(id) };
+            const result = await houseCollection.findOne(query);
+            res.send(result);
+        })
+
         // Get Owners added Houses API ====================================== >>>>>>
         app.get('/owner', async (req, res) => {
             const email = req.query.email;
-            const query = {email};
+            const query = { email };
             console.log(email);
             const result = await houseCollection.find(query).toArray();
             console.log(result);
             res.send(result);
-            
         })
+
+        // const finalQuery = { _id: new ObjectId(data.requset_food_id) }
+
+        // Make a request =================================================== >>>>>>>
+        app.post('/request', async (req, res) => {
+            const data = req.body;
+            const userQuery = {userEmail : data.userEmail};
+            const totalReq = await requestCollection.find(userQuery).toArray();
+            if(totalReq.length <2){
+                data.houseId = new ObjectId(data.houseId);
+                const idQuery = {houseId : data.houseId, userEmail:data.userEmail };
+                const isExist = await requestCollection.findOne(idQuery);
+                if(isExist){
+                    res.send({flag : -1 }) // already make request for this home !
+                }else{
+                    const result = await requestCollection.insertOne(data);
+                    res.send(result);
+                }
+            }else{
+                res.send({flag : 1}) // this user already make request for 2 home !
+            }
+        })
+
+        // if(result.insertedId){
+        //     const UpdatedField = {
+        //         $set : {
+        //             role : true
+        //         }
+        //     }
+        //     const finalResult = await houseCollection.updateOne(query,UpdatedField);
+        //     res.send(finalResult);
+        // }
 
 
 
