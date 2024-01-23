@@ -29,10 +29,11 @@ async function run() {
 
         // Database & Collections 
         const userCollection = client.db("HouseHunterDatabase").collection('userCollection');
+        const houseCollection = client.db("HouseHunterDatabase").collection("houseCollection");
 
 
 
-        // Create User (SIGNUP) API ============ >>>>>
+        // Create User (SIGNUP) API ========================================= >>>>>
         app.post('/user', async (req, res) => {
             const data = req.body;
             const query = { email: data?.email };
@@ -45,7 +46,7 @@ async function run() {
             }
         })
 
-        // Check User (LOGIN) API
+        // Check User (LOGIN) API ========================================== >>>>>>
         app.put('/user', async (req, res) => {
             try {
                 const data = req.body;
@@ -60,7 +61,29 @@ async function run() {
             }
         })
 
+        // Add new House API ================================================ >>>>>>
+        app.post('/item', async (req, res) => {
+            const data = req.body;
+            const result = await houseCollection.insertOne(data);
+            res.send(result);
+        })
 
+        // Get All Houses API =============================================== >>>>>>
+        app.get('/item', async (req, res) => {
+            const result = await houseCollection.find({}).toArray();
+            res.send(result);
+        })
+
+        // Get Owners added Houses API ====================================== >>>>>>
+        app.get('/owner', async (req, res) => {
+            const email = req.query.email;
+            const query = {email};
+            console.log(email);
+            const result = await houseCollection.find(query).toArray();
+            console.log(result);
+            res.send(result);
+            
+        })
 
 
 
