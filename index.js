@@ -131,7 +131,8 @@ async function run() {
         app.post('/request', async (req, res) => {
             const data = req.body;
             const userQuery = { userEmail: data.userEmail };
-            const totalReq = await requestCollection.find(userQuery).toArray();
+            var totalReq = await requestCollection.find(userQuery).toArray();
+            totalReq = totalReq.filter(one=>one.reqStatus !== 'deleted');  // Im not counting the delted req here !
             if (totalReq.length < 2) {
                 data.houseId = new ObjectId(data.houseId);
                 const idQuery = { houseId: data.houseId, userEmail: data.userEmail };
@@ -156,6 +157,62 @@ async function run() {
         //     const finalResult = await houseCollection.updateOne(query,UpdatedField);
         //     res.send(finalResult);
         // }
+
+        // Get Ranter added Houses API ====================================== >>>>>>
+        app.get('/ranter', async (req, res) => {
+            const email = req.query.email;
+            const query = { userEmail: email };
+            const result = await requestCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // Delete Ranter request Houses API ====================================== >>>>>>
+        app.delete('/ranter/:sid', async (req, res) => {
+            const id = req.params.sid;
+            const query = {_id : new ObjectId(id)};
+            const result = await requestCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        // Get an Owners House Req API =========================================== >>>>>>
+        app.get('/request',async(req,res)=>{
+            const email = req.query?.email;
+            const query = { ownerEmail : email };
+            const result = await requestCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // req delete related API ================================================ >>>>>>
+        app.patch('/request/:sid',async(req,res)=>{
+            const id = req.params.sid;
+            const query = {_id : new ObjectId(id)};
+            const updatedDoc = {
+                $set:{
+                    reqStatus : 'deleted'
+                }
+            }
+            const result = await requestCollection.updateOne(query,updatedDoc);
+            res.send(result);
+        })
+
+        // req accept by owner API ============================================== >>>>>>>
+        app.put('/request',async(req,res)=>{
+            const data = req.body;
+            const homeQuery = {_id : new ObjectId(data?.homeId)};
+            const reqQuery = {_id : new ObjectId(data?.reqId)};
+            try{
+                const updatedDocForHome = {$set:{status : true}}
+                const HomeRes = await houseCollection.updateOne(homeQuery,updatedDocForHome);
+                if(HomeRes.modifiedCount >0){
+                    const updatedDocForReq = {$set:{reqStatus : 'accepted'}}
+                    const ReqRes = await requestCollection.updateOne(reqQuery,updatedDocForReq);
+                    res.send(ReqRes);
+                }
+            }catch(err){
+                res.send(err.message);
+            }
+        })
+
 
 
 
