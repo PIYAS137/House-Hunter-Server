@@ -148,16 +148,6 @@ async function run() {
             }
         })
 
-        // if(result.insertedId){
-        //     const UpdatedField = {
-        //         $set : {
-        //             role : true
-        //         }
-        //     }
-        //     const finalResult = await houseCollection.updateOne(query,UpdatedField);
-        //     res.send(finalResult);
-        // }
-
         // Get Ranter added Houses API ====================================== >>>>>>
         app.get('/ranter', async (req, res) => {
             const email = req.query.email;
@@ -212,6 +202,7 @@ async function run() {
                 res.send(err.message);
             }
         })
+
 
 
 
